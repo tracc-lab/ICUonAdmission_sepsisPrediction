@@ -4,7 +4,11 @@ import pandas as pd
 
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split, StratifiedKFold, KFold
+from sklearn.model_selection import train_test_split
 
+
+import sys
+sys.path.append('./Methods_utils')
 import Methods_utils.methods as custom
 import Methods_utils.methods_heatmap as heatmap
 
@@ -544,7 +548,6 @@ def train_featSel_heatmapTop10 (CV_nr):
     heatmapTop10 (CV_nr, shap_folds, rf_folds, xgb_folds, ridge_folds, logistic_folds, X_pool_orig_imbalanced, y_pool_orig_imbalanced, experim)
 
 
-def featureSelection_andPredictions (CV_nr = 3, extras = False,wish_toPlot_AUROC = False ,wish_toPlot_AUPRC = False):
+def featureSelection_andPredictions (CV_nr, extras, wish_toPlot_AUROC, wish_toPlot_AUPRC):
     train_featSel_heatmapTop10(CV_nr)
     
-featureSelection_andPredictions()
