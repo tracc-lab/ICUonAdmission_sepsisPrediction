@@ -380,9 +380,9 @@ def print_AUROCandAUPRC_andSTD (results_dict):
         print(f"Features: {features}, Mean AUPRC: {values['mean']}, Stddev: {values['stddev']}")
 
 #%% Retrieve data and make it usable
-def getData(data_path):
+def getData(data_path, CV_nr):
     # read the all CVs to extract the avg perf model ^ best score
-    cv_resPath = './resultsAllCVs_pipeline_10__split_10.csv' #'C:/Users/aa36.MEDMA/Desktop/ML_paper/Restructured_withConfusionMatrix_Balanced/resultsAllCVs_pipeline_10__split_10.csv'
+    cv_resPath = './resultsAllCVs_pipeline_' + str(CV_nr) + '__split_' + str(CV_nr) + '.csv' #'C:/Users/aa36.MEDMA/Desktop/ML_paper/Restructured_withConfusionMatrix_Balanced/resultsAllCVs_pipeline_10__split_10.csv'
     data_CV = pd.read_csv(cv_resPath, encoding='latin-1', sep='~')
 
     # read heatmap cv to get the features
@@ -444,7 +444,7 @@ def getData(data_path):
     return X, y_toSplit, featureSelection_options, data_onset, best_avg_model
 
 #%% Train models and use other functions
-def trainModels_andTest(X, y_toSplit, featureSelection_options, data_onset, best_avg_model):
+def trainModels_andTest(X, y_toSplit, featureSelection_options, data_onset, best_avg_model, number_ofIterations):
     results_dir = "./Results_iterationPlots/"
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
@@ -475,7 +475,7 @@ def trainModels_andTest(X, y_toSplit, featureSelection_options, data_onset, best
 
     y_test.reset_index(drop=True)
 
-    for counter_iter in range (0,3):
+    for counter_iter in range (0, number_ofIterations):
         count = 0
         
         plot_number = results_dir + str(counter_iter)
@@ -582,9 +582,9 @@ def trainModels_andTest(X, y_toSplit, featureSelection_options, data_onset, best
     print_AUROCandAUPRC_andSTD (results_dict)
 
 #%% Wrap this .py script
-def wrapAdvancedAnalysis (data_path):
-    X, y_toSplit, featureSelection_options, data_onset, best_avg_model = getData(data_path)
-    trainModels_andTest(X, y_toSplit, featureSelection_options, data_onset, best_avg_model)
+def wrapAdvancedAnalysis (data_path, CV_nr, number_ofIterations):
+    X, y_toSplit, featureSelection_options, data_onset, best_avg_model = getData(data_path, CV_nr)
+    trainModels_andTest(X, y_toSplit, featureSelection_options, data_onset, best_avg_model, number_ofIterations)
 
 
 #data_path = 'C:/Users/aa36.MEDMA/Desktop/Franzi/CC_QtJune/New_Bianka/fbentriesProgV2.csv'
