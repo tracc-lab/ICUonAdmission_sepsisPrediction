@@ -10,11 +10,11 @@ if __name__ == '__main__':
     print("Your choice was: ", data )
     
     if data == '' or data == '\n':
-        data_path = 'C:/Users/aa36.MEDMA/Desktop/Franzi/CC_QtJune/New_Bianka/fbentriesProgV2.csv'
+        data_path = 'insert_your_dataPath'
     else:
         data_path = data
 
-    #data_path = 'C:/Users/aa36.MEDMA/Desktop/Franzi/CC_QtJune/New_Bianka/fbentriesProgV2.csv'
+    
     
     CV_nr = input("Please type how many folds should the cross-validation in the feature selection and prediction part to have/had. If no input is given, 10 is the default. ")
     if CV_nr == '' or data == '\n':
