@@ -28,6 +28,8 @@ Our data contains 52 features from University Hospital Mannheim surgical ICU col
 - **Vital signs**
 - **Demographics**
 
+![Alexandra Albu - ICCAI US 2024](https://github.com/user-attachments/assets/e70b4dc3-72ac-4e03-a131-5352a21342e4)
+
 ## How to run the code? 
 ### Installation
 
