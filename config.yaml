@@ -1,0 +1,36 @@
+################################################################################################################################
+#                                                    Welcome to the config file                                                #
+################################################################################################################################
+# Here we typically store parts that do not change while the code is running.                                                  #
+# Such things are: paths to data, results folder paths, the features we want to include in the analysis, color schemes, etc.   #
+# This can we easily adapted and changed when we want to slightly adjust the code or provide different data.                   #
+# Enjoy! - AA                                                                                                                  #
+################################################################################################################################
+data_paths:
+  original_data_path: "./Data/name_of_original_csv.csv"  # ./ means that what comes after it is in the same folder as the code
+  cv_data_path: "./Data/data_featSel.csv"  # CV data (90% of original)
+  holdout_data_path: "./Data/data_holdout.csv" # Hold-out data (10% of original)
+
+data_aspects:
+  original_data_delimiter: '~'
+  data_columns: ['c_feature_1', 'o_feature_14', 'n_feature_19']
+  target_feature: 'your_target_feature'
+  feat_LASSO_prePipeline: ['any_list_of_features', 'that_may_be_selected_prior', 
+   'can_be_any_combination_of_features']
+  onset_data_path: 'data_path_to_onset_csv_if_existing.csv'
+
+results_feat_sel:
+  dir_path: "./Results_featSel"
+  PT10_res: './Results_featSel/final_stratif.csv'
+  
+results_holdOut:
+  results_folder: "./Results_hold-out_eval"
+  
+
+misc:
+  entering_method_print: "################################# "
+  extras: True
+  wish_toPlot_AUROC: False
+  wish_toPlot_AUPRC: False
+  PT10_extras: False
+  colors_holdOut: ['#630C3A', '#27C3C1', '#FFC107', '#7E34F9', '#E01889', '#617111','#fe6100',  '#7d413c','#423568', '#5590b4']
