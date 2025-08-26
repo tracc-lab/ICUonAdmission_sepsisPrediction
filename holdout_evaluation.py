@@ -199,11 +199,17 @@ def extract_model_class_name(model_obj_or_str):
         return model_obj_or_str.__class__.__name__
     else:
         return str(model_obj_or_str)
-    
-def print_AUROCandAUPRC_andSTD(results_dict, best_model_name):
+def print_AUROCandAUPRC_andSTD(results_dict, best_model_name, featureSelection_options):
     """
     Print summary: Model name, Features (name_of_set), Average AUROC, STD, and likewise for AUPRC.
     """
+    # Create mapping from feature sets to their labels
+    iteration_labels = ['PT10', 'CV10', 'All']
+    feature_to_label = {}
+    for idx, features in enumerate(featureSelection_options):
+        label = iteration_labels[idx] if idx < len(iteration_labels) else str(idx)
+        feature_to_label[tuple(features)] = label
+    
     # Gather results only for the best model
     indices = [i for i, model in enumerate(results_dict['Model']) if model == best_model_name]
     if not indices:
@@ -220,10 +226,11 @@ def print_AUROCandAUPRC_andSTD(results_dict, best_model_name):
         group_stats[features_set]['AUPRC'].append(results_dict['AUPRC'][i])
 
     for features_set, metrics in group_stats.items():
-        # Convert tuple to clean, human-readable set name
-        features_display = ', '.join(str(f) for f in features_set)
+        # Get the meaningful feature set name (PT10, CV10, All) and show features
+        feature_set_name = feature_to_label.get(features_set, f"Unknown ({len(features_set)} features)")
+        features_list = ', '.join(str(f) for f in features_set)
         print(f"Model name: {best_model_name}")
-        print(f"Features (name_of_set): {features_display}")
+        print(f"Features ({feature_set_name}): {features_list}")
         print(f"Average AUROC: {np.mean(metrics['AUROC']):.4f}, STD: {np.std(metrics['AUROC']):.4f}")
         print(f"Average AUPRC: {np.mean(metrics['AUPRC']):.4f}, STD: {np.std(metrics['AUPRC']):.4f}")
         print("-" * 70)
@@ -359,8 +366,8 @@ def trainModels_andTest(X, y_toSplit, featureSelection_options, data_onset, best
     plotViolin(plot_info_df, results_dir)
     # THIS LINE IS THE KEY: Always extract class name from best_avg_model for filtering!
     best_model_name = extract_model_class_name(best_avg_model)
-    print_AUROCandAUPRC_andSTD(results_dict, best_model_name)
-    print(results_dict)
+    print_AUROCandAUPRC_andSTD(results_dict, best_model_name, featureSelection_options)
+    # print(results_dict)
 
 def wrapAdvancedAnalysis(CV_nr, run_number, number_ofIterations):
     config = load_config()
