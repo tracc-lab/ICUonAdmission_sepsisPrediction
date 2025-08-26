@@ -4,6 +4,7 @@ Created on Mon Jan 29 14:15:21 2024
 
 @author: Asus
 """
+import os
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -62,7 +63,8 @@ def plot_auc_models (*args):
     
     plt.legend()
     plt.savefig("AUC ROC" + experim + "baseline_allFeats_models.png")
-    plt.show()
+    #plt.show()
+    plt.close()
     
 def plot_auprc_models (*args):
     
@@ -80,7 +82,8 @@ def plot_auprc_models (*args):
     
     plt.legend()
     plt.savefig("AUPRC" + experim + "baseline_allFeats_models.png")
-    plt.show()
+    #plt.show()
+    plt.close()
 
 # categorize time into bins to plot_onset with correct, incorrect, total predictions
 # def categorize_time(onset_array):
@@ -96,7 +99,7 @@ def categorize_time(onset_array):
 #     return categories
 
 # plot total, correct, and incorrect predictions based on onset time categories.
-def plot_onset(y_test, predictions, name, onset_array, plot_number):
+def plot_onset(y_test, predictions, name, onset_array, plot_number, results_dir):
     print("Length of y_test onset:", len(y_test), y_test)
     print("Length of predictions onset:", len(predictions), predictions)
     print("Length of onset_array onset:", len(onset_array))
@@ -129,10 +132,11 @@ def plot_onset(y_test, predictions, name, onset_array, plot_number):
     plt.figure(figsize=(16, 12))
     ax = grouped.plot(kind='bar', width=0.6)
     plt.title(f'Predictions for {name}', fontsize = 16)
-    plt.xlabel('Time Categories (days)', fontsize=16-2)
-    plt.ylabel('Count', fontsize=16-2)
+    plt.xlabel('Time intervals (days) before onset', fontsize=16-2)
+    plt.ylabel('Number of cases', fontsize=16-2)
     
     plt.xticks(rotation=0, fontsize=14)  # Adjust x-tick font size and rotation
+    plt.tick_params(axis='x', length=0) # removes the small tick lines
     plt.yticks(fontsize=14)
 
     plt.legend(title='Prediction Type')
@@ -146,8 +150,26 @@ def plot_onset(y_test, predictions, name, onset_array, plot_number):
 
     # Save plot
     plt.tight_layout()
-    plt.savefig(str(plot_number) + f'_{name}_predictions_by_time_categories' + '.png', dpi = 600)
-    plt.show()
+    
+    # Construct the full save path using absolute path and shortened filename
+    import os
+    abs_results_dir = os.path.abspath(results_dir)
+    os.makedirs(abs_results_dir, exist_ok=True)  # Ensure directory exists
+    
+    # Extract model name and feature set from name (e.g., "Logistic_PT10" -> "Logistic" + "PT10")
+    if '_' in name:
+        model_part, feature_part = name.split('_', 1)
+        model_short = model_part[:8]  # Shorten model name
+        feature_short = feature_part[:4]  # Shorten feature set name
+        save_path = os.path.join(abs_results_dir, f"{plot_number}_{model_short}_{feature_short}_onset.png")
+    else:
+        model_short = name[:8]
+        save_path = os.path.join(abs_results_dir, f"{plot_number}_{model_short}_onset.png")
+    print(f"DEBUG: Saving onset plot to: {save_path}")
+    
+    plt.savefig(save_path, dpi = 600)
+    #plt.show()
+    plt.close()
     
     return grouped
     
@@ -168,6 +190,9 @@ def plot_custom_confusion_matrix(cm, classes, title, cmap):
     plt.xticks(tick_marks, classes, fontsize=28)  # Adjust font size for tick labels
     plt.yticks(tick_marks, classes, fontsize=28)  
 
+    plt.tick_params(axis='x', length=0) # removes the small tick lines
+    plt.tick_params(axis='y', length=0) # removes the small tick lines
+
     fmt = 'd'  ### format decimal (integer)
     thresh = cm.max() / 2.
     for i in range(cm.shape[0]):
@@ -182,7 +207,8 @@ def plot_custom_confusion_matrix(cm, classes, title, cmap):
     
     plt.tight_layout()
 
-def plot_confusionMatrix(y_test, predictions, name, onset_array, plot_number):
+def plot_confusionMatrix(y_test, predictions, name, onset_array, plot_number, results_dir):
+    import os
     cm = confusion_matrix(y_test, predictions, labels=[0, 1])
     print(cm[1][0])
     print("Correctly classified septic patients: ", cm[1][1])
@@ -193,11 +219,28 @@ def plot_confusionMatrix(y_test, predictions, name, onset_array, plot_number):
     plot_custom_confusion_matrix(cm, ['Sepsis-free', 'Sepsis'], 'Confusion matrix', cmap = plt.cm.BuPu)
     
     plt.tight_layout()
-    plt.savefig( str(plot_number) + '_confusion_matrixCustom_' + name + '.png', dpi = 600)
-    plt.show()
+    
+    # Construct the full save path using absolute path and shortened filename
+    abs_results_dir = os.path.abspath(results_dir)
+    os.makedirs(abs_results_dir, exist_ok=True)  # Ensure directory exists
+    
+    # Extract model name and feature set from name (e.g., "Logistic_PT10" -> "Logistic" + "PT10")
+    if '_' in name:
+        model_part, feature_part = name.split('_', 1)
+        model_short = model_part[:8]  # Shorten model name
+        feature_short = feature_part[:4]  # Shorten feature set name
+        save_path = os.path.join(abs_results_dir, f"{plot_number}_cm_{model_short}_{feature_short}.png")
+    else:
+        model_short = name[:8]
+        save_path = os.path.join(abs_results_dir, f"{plot_number}_cm_{model_short}.png")
+    print(f"DEBUG: Saving confusion matrix to: {save_path}")
+    
+    plt.savefig(save_path, dpi = 600)
+    #plt.show()
+    plt.close()
     
     # Plot the onset time as well 
-    grouped = plot_onset(y_test, predictions, name, onset_array, plot_number)
+    grouped = plot_onset(y_test, predictions, name, onset_array, plot_number, results_dir)
     
     return grouped
 
@@ -223,6 +266,7 @@ def dummy_clf_majority0(X_train, y_train, X_test, y_test, confusion_matrix, name
     predictions_dummy = dummy_clf.predict(X_test)
         
     dummy_Grid_probabilities = dummy_clf.predict_proba(X_test)
+    dummy_probabilities = dummy_Grid_probabilities[:,1]
     
     auc_dummy, fpr_dummy, tpr_dummy, auprc_dummy, precision_dummy, recall_dummy = metrics_model (y_test, dummy_probabilities, predictions_dummy, "Dummy All Majority")
     
@@ -249,11 +293,14 @@ def dummy_clf_minority1(X_train, y_train, X_test, y_test, confusion_matrix, name
     return dummy_clf, auc_dummy, fpr_dummy, tpr_dummy, auprc_dummy, precision_dummy, recall_dummy
 
 
-def random_forest(X_train, y_train, X_test, y_test, confusion_matrix, name_cm, onset_array, plot_number):
+def random_forest(X_train, y_train, X_test, y_test, confusion_matrix, name_cm, onset_array, plot_number, results_dir):
     rf = RandomForestClassifier(random_state=1)
+    # rf.set_params(n_estimators = 100, max_features = 'sqrt', max_leaf_nodes = 9,
+    #                              min_samples_split = 2, min_samples_leaf = 1, 
+    #                              warm_start = True, bootstrap = True)
     rf.set_params(n_estimators = 100, max_features = 'sqrt', max_leaf_nodes = 9,
-                                 min_samples_split = 2, min_samples_leaf = 1, 
-                                 warm_start = True, bootstrap = True)
+                                     min_samples_split = 10, min_samples_leaf = 4, 
+                                     warm_start = True, bootstrap = True)
     rf.fit(X_train, y_train)
     
     predictions_rf = rf.predict(X_test)
@@ -264,14 +311,14 @@ def random_forest(X_train, y_train, X_test, y_test, confusion_matrix, name_cm, o
     auc_rf, fpr_rf, tpr_rf, auprc_rf, precision_rf, recall_rf = metrics_model (y_test, rf_probabilities, predictions_rf, "Random Forest")
     
     if confusion_matrix == True:
-        plot_info = plot_confusionMatrix(y_test, predictions_rf, name_cm, onset_array, plot_number)
+        plot_info = plot_confusionMatrix(y_test, predictions_rf, name_cm, onset_array, plot_number, results_dir)
     
     return rf, auc_rf, fpr_rf, tpr_rf, auprc_rf, precision_rf, recall_rf, plot_info
     
-def svm(X_train, y_train, X_test, y_test, confusion_matrix, name_cm, onset_array, plot_number):
+def svm(X_train, y_train, X_test, y_test, confusion_matrix, name_cm, onset_array, plot_number, results_dir):
     svm = SVC (random_state=1, probability=True)
-    # svm.set_params(C = 1, degree = 1, gamma = 0.01, kernel = 'rbf')
-    svm.set_params(C = 10, degree = 1, gamma = 0.01, kernel = 'linear')
+    svm.set_params(C = 1, degree = 1, gamma = 0.01, kernel = 'rbf')
+    # svm.set_params(C = 10, degree = 1, gamma = 0.01, kernel = 'linear')
     
     svm.fit(X_train, y_train)
       
@@ -287,16 +334,16 @@ def svm(X_train, y_train, X_test, y_test, confusion_matrix, name_cm, onset_array
     y_pred_svm_series = pd.Series(y_pred_svm, index=y_test.index)
     
     if confusion_matrix == True:
-        plot_info = plot_confusionMatrix(y_test, y_pred_svm_series, name_cm, onset_array, plot_number)
+        plot_info = plot_confusionMatrix(y_test, y_pred_svm_series, name_cm, onset_array, plot_number, results_dir)
         
     return svm, auc_svm, fpr_svm, tpr_svm, auprc_svm, precision_svm, recall_svm, plot_info
 
-def xgboost_clf(X_train, y_train, X_test, y_test, confusion_matrix, name_cm, onset_array, plot_number):
+def xgboost_clf(X_train, y_train, X_test, y_test, confusion_matrix, name_cm, onset_array, plot_number, results_dir):
     xgboost = xgb.XGBClassifier(random_state=1)
-    # xgboost.set_params(colsample_bytree= 1, gamma = 1, max_depth= 18, 
-    #                    min_child_weight= 10, n_estimators= 100, reg_alpha= 1, reg_lambda= 0)
-    xgboost.set_params(colsample_bytree= 0.5, gamma = 9, max_depth= 18, 
-                   min_child_weight= 10, n_estimators= 500, reg_alpha= 1, reg_lambda= 0)
+    xgboost.set_params(colsample_bytree= 1, gamma = 1, max_depth= 18, 
+                       min_child_weight= 10, n_estimators= 100, reg_alpha= 1, reg_lambda= 0)
+    # xgboost.set_params(colsample_bytree= 0.5, gamma = 9, max_depth= 18, 
+    #                min_child_weight= 10, n_estimators= 500, reg_alpha= 1, reg_lambda= 0)
     
     xgboost.fit(X_train, y_train) 
     
@@ -308,14 +355,14 @@ def xgboost_clf(X_train, y_train, X_test, y_test, confusion_matrix, name_cm, ons
     auc_xgboost, fpr_xgboost, tpr_xgboost, auprc_xgboost, precision_xgboost, recall_xgboost = metrics_model (y_test, xgboost_probabilities, predictions_xgboost, "XGBoost")
     
     if confusion_matrix == True:
-        plot_info = plot_confusionMatrix(y_test, predictions_xgboost, name_cm, onset_array, plot_number)
+        plot_info = plot_confusionMatrix(y_test, predictions_xgboost, name_cm, onset_array, plot_number, results_dir)
         
     return xgboost, auc_xgboost, fpr_xgboost, tpr_xgboost, auprc_xgboost, precision_xgboost, recall_xgboost, plot_info
 
-def ridge(X_train, y_train, X_test, y_test, confusion_matrix, name_cm, onset_array, plot_number):
+def ridge(X_train, y_train, X_test, y_test, confusion_matrix, name_cm, onset_array, plot_number, results_dir):
     ridge = RidgeClassifier(random_state=1)
-    # ridge.set_params(alpha = 34.30469286314926)
-    ridge.set_params(alpha = 0.029150530628251816)
+    ridge.set_params(alpha = 34.30469286314926)
+    # ridge.set_params(alpha = 0.029150530628251816)
     
     ridge.fit(X_train, y_train)
     
@@ -326,14 +373,14 @@ def ridge(X_train, y_train, X_test, y_test, confusion_matrix, name_cm, onset_arr
     auc_ridge, fpr_ridge, tpr_ridge, auprc_ridge, precision_ridge, recall_ridge = metrics_model (y_test, ridge_probabilities, predictions_ridge, "Ridge")
 
     if confusion_matrix == True:
-        plot_info = plot_confusionMatrix(y_test, predictions_ridge, name_cm, onset_array, plot_number)
+        plot_info = plot_confusionMatrix(y_test, predictions_ridge, name_cm, onset_array, plot_number, results_dir)
         
     return ridge, auc_ridge, fpr_ridge, tpr_ridge, auprc_ridge, precision_ridge, recall_ridge, plot_info
     
-def logistic(X_train, y_train, X_test, y_test, confusion_matrix, name_cm, onset_array, plot_number):
+def logistic(X_train, y_train, X_test, y_test, confusion_matrix, name_cm, onset_array, plot_number, results_dir):
     logistic = LogisticRegression(random_state=1)
-    logistic.set_params(penalty ='l1', C = 2.310129700083163,  solver = 'saga', max_iter = 500)
-    
+    # logistic.set_params(penalty ='l1', C = 2.310129700083163,  solver = 'saga', max_iter = 500)
+    logistic.set_params(penalty ='l2', C = 0.08111308307896872,  solver = 'saga', max_iter = 100)
     logistic.fit(X_train, y_train)
     
     y_pred_logistic = logistic.predict(X_test)
@@ -345,6 +392,6 @@ def logistic(X_train, y_train, X_test, y_test, confusion_matrix, name_cm, onset_
     auc_logistic, fpr_logistic, tpr_logistic, auprc_logistic, precision_logistic, recall_logistic = metrics_model (y_test, logistic_probabilities, y_pred_logistic, "Logistic")
     
     if confusion_matrix == True:
-        plot_info = plot_confusionMatrix(y_test, y_pred_logistic, name_cm, onset_array, plot_number)
+        plot_info = plot_confusionMatrix(y_test, y_pred_logistic, name_cm, onset_array, plot_number, results_dir)
         
     return logistic, auc_logistic, fpr_logistic, tpr_logistic, auprc_logistic, precision_logistic, recall_logistic, plot_info

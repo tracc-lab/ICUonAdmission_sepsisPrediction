@@ -38,7 +38,8 @@ def heatmap_oneFeatureSelectionCV (featSel_folds, save_name):
     plt.title('Heatmap of Element Counts in Arrays')
     # plt.savefig("Heatmap_" + save_name + ".png")
     plt.savefig(name_to_save)
-    plt.show()
+    #plt.show()
+    plt.close()
 
 ## we don't include lasso here beauase it never changes
 def original_heatmap(*args):
@@ -118,7 +119,8 @@ def original_heatmap(*args):
 
     plt.title('Heatmap of Feature Selection Prevalence', fontsize = 20)
     plt.savefig("Heatmap of features" + save_name + ".png", bbox_inches='tight', dpi = 600)
-    plt.show()
+    # plt.show()
+    plt.close()
     
     return top10_ever_list
     

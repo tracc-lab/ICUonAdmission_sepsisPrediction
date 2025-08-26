@@ -221,6 +221,7 @@ def logistic(X_train, y_train, X_test, y_test):
 
 #%% Feature Importance
 def feat_imp_rf(model_rf, names):
+    # the importance can not be negative because it is in fact based on the decrease in impurity
     importances_rf = model_rf.feature_importances_
     res_rf_ft = {}
     
@@ -241,6 +242,7 @@ def feat_imp_rf(model_rf, names):
 
 
 def feat_imp_xgb(model_xgb, names):
+    # the importance can not be negative because it is in fact based on gain
     xgb_feat_imp = model_xgb.feature_importances_
 
     res_xgb = {}
@@ -267,8 +269,11 @@ def feat_imp_ridge(model_ridge, names):
 
     feature_importance_ridge = pd.DataFrame({'Feature': names, 'Importance': np.abs(coefficients)})
     feature_importance_ridge = feature_importance_ridge.sort_values('Importance', ascending=False)
+
+    #print(f"All ridge feature importance are: {feature_importance_ridge}")
     
-    feature_importance_ridge_arr = feature_importance_ridge.query('Importance > 0.1')['Feature'].values
+
+    feature_importance_ridge_arr = feature_importance_ridge.query('Importance > 0.01')['Feature'].values
     print(feature_importance_ridge_arr[0:10])
 
     keys = feature_importance_ridge_arr[0:10].tolist()
@@ -282,7 +287,7 @@ def feat_imp_logistic(model_logistic, names):
     feature_importance_logistic = pd.DataFrame({'Feature': names, 'Importance': np.abs(coefficients)})
     feature_importance_logistic = feature_importance_logistic.sort_values('Importance', ascending=False)
     
-    feature_importance_logistic_arr = feature_importance_logistic.query('Importance > 0.1')['Feature'].values
+    feature_importance_logistic_arr = feature_importance_logistic.query('Importance > 0.01')['Feature'].values
 
     keys = feature_importance_logistic_arr[0:10].tolist()
     print(keys)
@@ -298,28 +303,30 @@ def feat_imp_logistic(model_logistic, names):
 # which features truly contributed to the prediction stage on the X_test.                                   #
 # Oh, moreover, this test is the test among the folds. *NOT* the hold-out                                   #
 #############################################################################################################
-def feat_imp_shap(model, names, kind, subset): # it is just model because it may change every time          
-    if kind == 'rf' or kind == 'random forest' or kind == 'svm':
-        explainer = shap.KernelExplainer(model.predict, subset)
-        shap_values = explainer.shap_values(subset, check_additivity=False)
+def feat_imp_shap(model, names, kind, subset_train, subset_test): # it is just model because it may change every time          
+    names = np.array(names)
+    if kind == 'rf' or kind == 'random forest' or kind == 'svm' or kind == 'xgb':
+        explainer = shap.KernelExplainer(model.predict, subset_train)
+        shap_values = explainer.shap_values(subset_test, check_additivity=False)
         print(shap_values)
         # Get top 10 features based on SHAP values
         vals = np.abs(shap_values).mean(axis=0)
         top_10_features_indices = np.argsort(vals)[::-1][:10]
         top_10_features = names[top_10_features_indices]
         return top_10_features.tolist()  
-    elif kind == 'xgb':
-        explainer = shap.TreeExplainer(model, subset)  #shap.Explainer(model, subset) 
+    # elif kind == 'xgb':
+    #     explainer = shap.TreeExplainer(model, subset)  #shap.Explainer(model, subset) 
     elif kind == 'linear':
-        explainer = shap.LinearExplainer(model, subset)
+        explainer = shap.LinearExplainer(model, subset_train)
     
-    shap_values = explainer.shap_values(subset)
+    shap_values = explainer.shap_values(subset_test)
     
     # Selected top 10 features from SHAP values
     vals = np.abs(shap_values).mean(axis=0)
     top_10_features_indices = np.argsort(vals)[::-1][:10]
-    top_10_features = names[top_10_features_indices]
-    
+    #top_10_features = names[top_10_features_indices]
+    top_10_features = np.array(names)[top_10_features_indices]
+
     # Create a DataFrame with SHAP values and top 10 features
     shap_df = pd.DataFrame(shap_values, columns=names)
     shap_df['abs_shap_values_mean'] = np.abs(shap_values).mean(axis=1)
